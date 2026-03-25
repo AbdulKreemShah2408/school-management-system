@@ -27,7 +27,7 @@ const schema = z.object({
     .refine((files) => files?.length > 0, "Image is required")
     .transform((files) => files[0]), 
 });
-});
+
 
 type Inputs = z.infer<typeof schema>;
 
@@ -43,7 +43,7 @@ const ParentForm = ({
     handleSubmit,
     formState: { errors },
   } = useForm<Inputs>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any
   });
 
   const onSubmit = handleSubmit((data) => {
