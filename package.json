@@ -6,12 +6,14 @@
   },
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+  "dev": "next dev",
+  "build": "prisma generate && next build",
+  "start": "next start",
+  "lint": "next lint"
+},
   "dependencies": {
+    "@clerk/elements": "^0.24.14",
+    "@clerk/nextjs": "^5.2.4",
     "@hookform/resolvers": "^3.9.0",
     "@prisma/client": "^5.10.0",
     "@types/react-big-calendar": "^1.8.9",
@@ -22,6 +24,7 @@
     "react-calendar": "^5.0.0",
     "react-dom": "^18",
     "react-hook-form": "^7.52.2",
+    "react-toastify": "^11.0.5",
     "recharts": "^2.12.7",
     "zod": "^3.23.8"
   },
