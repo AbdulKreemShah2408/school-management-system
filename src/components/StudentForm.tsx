@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import InputField from "./InputField";
 import Image from "next/image";
-import { Dispatch, SetStateAction, useActionState, useEffect, useState } from "react";
+import { useFormState } from "react-dom"
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { studentSchema, StudentSchema } from "@/lib/formValidationSechma";
 import { createStudent, updateStudent } from "@/lib/actions";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,7 @@ const StudentForm = ({
   });
 
   const [img, setImg] = useState<any>();
-  const [state, formAction] = useActionState(
+  const [state, formAction] = useFormState(
     type === "create" ? createStudent : updateStudent,
     { success: false, error: false }
   );

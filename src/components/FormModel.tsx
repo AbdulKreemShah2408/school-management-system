@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { Dispatch, SetStateAction, useActionState, useEffect, useState } from "react";
+import { useFormState } from "react-dom"
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   deleteClass,
@@ -146,7 +147,7 @@ const FormModel = ({
   const [open, setOpen] = useState(false);
 
   const Form = () => {
-    const [state, formAction] = useActionState(deleteActionMap[table], {
+    const [state, formAction] = useFormState(deleteActionMap[table], {
       success: false,
       error: false,
     });

@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import InputField from "./InputField";
 import { subjectSchema, SubjectSchema } from "@/lib/formValidationSechma";
 import { createSubject, updateSubject } from "@/lib/actions";
-import { Dispatch, SetStateAction, useActionState } from "react";
+import { useFormState } from "react-dom"
+import { Dispatch, SetStateAction, } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useEffect, startTransition } from "react";
@@ -30,7 +31,7 @@ const SubjectForm = ({
   });
 
   // Server actions state
-  const [state, formAction, isPending] = useActionState(
+  const [state, formAction, isPending] = useFormState(
     type === "create" ? createSubject : updateSubject,
     {
       success: false,
