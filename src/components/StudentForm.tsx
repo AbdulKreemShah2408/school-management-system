@@ -54,11 +54,11 @@ const StudentForm = ({
       async (values) => {
         startTransition(async () => {
           await (formAction as any)(values);
-  
+          await (formAction as any)({ ...values, img: img?.secure_url });
           if (setOpen) setOpen(false);
   
           toast.success(
-            `Students has been ${type === "create" ? "created" : "updated"} successfully!`,
+            `Student has been ${type === "create" ? "created" : "updated"} successfully!`,
           );
         });
       },

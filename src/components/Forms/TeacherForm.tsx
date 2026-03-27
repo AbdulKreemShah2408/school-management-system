@@ -64,7 +64,7 @@ const TeacherForm = ({
       async (values) => {
         startTransition(async () => {
           await (formAction as any)(values);
-  
+          await (formAction as any)({ ...values, img: img?.secure_url });
           if (setOpen) setOpen(false);
   
           toast.success(
