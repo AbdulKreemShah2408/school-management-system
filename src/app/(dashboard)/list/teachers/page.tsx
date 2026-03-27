@@ -1,27 +1,33 @@
-import FormContainer from "@/components/FormContainer"
-import Pagenation from "@/components/Pagenation"
-import Table from "@/components/Table"
-import TableSearch from "@/components/TableSearch"
-import prisma from "@/lib/prisma"
-import { ITEM_PER_PAGE } from "@/lib/settings"
-import { Class, Prisma, Subject, Teacher } from "@prisma/client"
-import Image from "next/image"
-import Link from "next/link"
-import { auth } from "@clerk/nextjs/server"
+import FormContainer from "@/components/FormContainer";
+import Pagenation from "@/components/Pagenation";
+import Table from "@/components/Table";
+import TableSearch from "@/components/TableSearch";
+import prisma from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import { Class, Prisma, Subject, Teacher } from "@prisma/client";
+import Image from "next/image";
+import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 
-type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] }
+type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
 const columns = (role: string | undefined) => [
   { header: "info", accessor: "info" },
-  { header: "Teacher ID", accessor: "teacherId", className: "hidden md:table-cell" },
-  { header: "Subjects", accessor: "subjects", className: "hidden md:table-cell" },
+  {
+    header: "Teacher ID",
+    accessor: "teacherId",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Subjects",
+    accessor: "subjects",
+    className: "hidden md:table-cell",
+  },
   { header: "Classes", accessor: "classes", className: "hidden md:table-cell" },
   { header: "Phone", accessor: "phone", className: "hidden lg:table-cell" },
   { header: "Address", accessor: "address", className: "hidden lg:table-cell" },
-  ...(role === "admin"
-    ? [{ header: "Actions", accessor: "action" }]
-    : []),
-]
+  ...(role === "admin" ? [{ header: "Actions", accessor: "action" }] : []),
+];
 
 const renderRow = (item: TeacherList, role: string | undefined) => (
   <tr
@@ -66,34 +72,32 @@ const renderRow = (item: TeacherList, role: string | undefined) => (
       </div>
     </td>
   </tr>
-)
+);
 
 const TeacherListPage = async ({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined }
+  searchParams: { [key: string]: string | undefined };
 }) => {
-  // ✅ auth ko yahan use karna hoga
-  const { sessionClaims } = await auth()
-  const role = (sessionClaims?.metadata as { role?: string })?.role
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
 
-  const { page, ...queryParams } = searchParams
-  const p = page ? parseInt(page) : 1
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(page) : 1;
 
-  // URL PARAMS CONDITION
-  const query: Prisma.TeacherWhereInput = {}
+  const query: Prisma.TeacherWhereInput = {};
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
           case "classId":
-            query.lessons = { some: { classId: parseInt(value) } }
-            break
+            query.lessons = { some: { classId: parseInt(value) } };
+            break;
           case "search":
-            query.name = { contains: value, mode: "insensitive" }
-            break
+            query.name = { contains: value, mode: "insensitive" };
+            break;
           default:
-            break
+            break;
         }
       }
     }
@@ -107,7 +111,7 @@ const TeacherListPage = async ({
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.teacher.count({ where: query }),
-  ])
+  ]);
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -131,7 +135,9 @@ const TeacherListPage = async ({
             >
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <FormContainer table="teacher" type="create" />}
+            {role === "admin" && (
+              <FormContainer table="teacher" type="create" />
+            )}
           </div>
         </div>
       </div>
@@ -146,7 +152,7 @@ const TeacherListPage = async ({
       {/* PAGENATION */}
       <Pagenation page={p} count={count} />
     </div>
-  )
-}
+  );
+};
 
-export default TeacherListPage
+export default TeacherListPage;

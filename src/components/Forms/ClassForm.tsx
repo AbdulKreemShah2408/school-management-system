@@ -6,7 +6,7 @@ import InputField from "../InputField";
 import { classSchema, ClassSchema } from "@/lib/formValidationSechma";
 import { createClass, updateClass } from "@/lib/actions";
 import { useFormState } from "react-dom";
-import { Dispatch, SetStateAction} from "react";
+import { Dispatch, SetStateAction } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useEffect, startTransition } from "react";
@@ -30,16 +30,14 @@ const ClassForm = ({
     resolver: zodResolver(classSchema) as any,
   });
 
-  // Server actions state
   const [state, formAction, isPending] = useFormState(
     type === "create" ? createClass : updateClass,
     {
       success: false,
       error: false,
-    }
+    },
   );
 
-  // Handle form submit
   const onSubmit = handleSubmit((formData) => {
     startTransition(() => {
       formAction(formData);
@@ -106,11 +104,13 @@ const ClassForm = ({
             <option value="" disabled>
               Select Supervisor
             </option>
-            {teachers.map((teacher: { id: string; name: string; surname: string }) => (
-              <option value={teacher.id} key={teacher.id}>
-                {teacher.name + " " + teacher.surname}
-              </option>
-            ))}
+            {teachers.map(
+              (teacher: { id: string; name: string; surname: string }) => (
+                <option value={teacher.id} key={teacher.id}>
+                  {teacher.name + " " + teacher.surname}
+                </option>
+              ),
+            )}
           </select>
           {errors.supervisorId?.message && (
             <p className="text-xs text-red-400">

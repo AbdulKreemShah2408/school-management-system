@@ -44,15 +44,12 @@ const TeacherForm = ({
     {
       success: false,
       error: false,
-    }
+    },
   );
 
   const router = useRouter();
 
   const onSubmit = handleSubmit((formData) => {
-    console.log(formData);
-
-    // ✅ FIX: wrap formAction inside startTransition
     startTransition(() => {
       formAction({ ...formData, img: img?.secure_url });
     });

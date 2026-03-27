@@ -15,7 +15,7 @@ const SubjectListPage = async ({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) => {
-  const { sessionClaims } =await auth();
+  const { sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
 
   const columns = [
@@ -98,10 +98,16 @@ const SubjectListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button title="d" className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button
+              title="d"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
+            >
               <Image src="/filter.png" alt="" width={14} height={14} />
             </button>
-            <button title="h" className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button
+              title="h"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
+            >
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (

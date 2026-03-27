@@ -22,12 +22,10 @@ const AssignmentListPage = async ({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) => {
-
-  const { userId, sessionClaims } =await auth();
+  const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
   const currentUserId = userId;
-  
-  
+
   const columns = [
     {
       header: "Subject Name",
@@ -56,13 +54,15 @@ const AssignmentListPage = async ({
         ]
       : []),
   ];
-  
+
   const renderRow = (item: AssignmentList) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
-      <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
+      <td className="flex items-center gap-4 p-4">
+        {item.lesson.subject.name}
+      </td>
       <td>{item.lesson.class.name}</td>
       <td className="hidden md:table-cell">
         {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
@@ -83,11 +83,9 @@ const AssignmentListPage = async ({
     </tr>
   );
 
-  const { page, ...queryParams } =await searchParams;
+  const { page, ...queryParams } = await searchParams;
 
   const p = page ? parseInt(page) : 1;
-
-  // URL PARAMS CONDITION
 
   const query: Prisma.AssignmentWhereInput = {};
 
@@ -114,8 +112,6 @@ const AssignmentListPage = async ({
       }
     }
   }
-
-  // ROLE CONDITIONS
 
   switch (role) {
     case "admin":
@@ -145,7 +141,7 @@ const AssignmentListPage = async ({
       break;
   }
 
-  const [data, count] = await prisma.$transaction([
+  const [data, count, lessons] = await prisma.$transaction([
     prisma.assignment.findMany({
       where: query,
       include: {
@@ -161,6 +157,11 @@ const AssignmentListPage = async ({
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.assignment.count({ where: query }),
+
+    prisma.lesson.findMany({
+      where: role === "teacher" ? { teacherId: currentUserId! } : {},
+      select: { id: true, name: true },
+    }),
   ]);
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -172,16 +173,26 @@ const AssignmentListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button title="g" className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button
+              title="g"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
+            >
               <Image src="/filter.png" alt="" width={14} height={14} />
             </button>
-            <button  title="g" className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button
+              title="g"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
+            >
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" ||
-              (role === "teacher" && (
-                <FormContainer table="assignment" type="create" />
-              ))}
+
+            {(role === "admin" || role === "teacher") && (
+              <FormContainer
+                table="assignment"
+                type="create"
+                relatedData={{ lessons }}
+              />
+            )}
           </div>
         </div>
       </div>

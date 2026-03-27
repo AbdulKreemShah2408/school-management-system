@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useFormState } from "react-dom"
+import { useFormState } from "react-dom";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import {
@@ -11,6 +11,11 @@ import {
   deleteStudent,
   deleteExam,
   deleteAssignment,
+  deleteParent,
+  deleteLesson,
+  deleteResult,
+  deleteEvent,
+  deleteAnnouncement,
 } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -22,14 +27,14 @@ const deleteActionMap = {
   class: deleteClass,
   teacher: deleteTeacher,
   student: deleteStudent,
-  parent: deleteSubject,
-  lesson: deleteSubject,
+  parent: deleteParent,
+  lesson: deleteLesson,
   exam: deleteExam,
   assignment: deleteAssignment,
-  result: deleteSubject,
+  result: deleteResult,
   attendance: deleteSubject,
-  announcement: deleteSubject,
-  event: deleteSubject,
+  announcement: deleteAnnouncement,
+  event: deleteEvent,
 };
 
 const TeacherForm = dynamic(() => import("./Forms/TeacherForm"), {
@@ -74,7 +79,7 @@ const forms: {
     setOpen: Dispatch<SetStateAction<boolean>>,
     type: "create" | "update",
     data?: any,
-    relatedData?: any
+    relatedData?: any,
   ) => JSX.Element;
 } = {
   teacher: (setOpen, type, data, relatedData) => (
@@ -93,8 +98,14 @@ const forms: {
       relatedData={relatedData}
     />
   ),
-  exam: (setOpen, type, data,relatedData) => <ExamForm type={type} data={data}  setOpen={setOpen}
-      relatedData={relatedData}/>,
+  exam: (setOpen, type, data, relatedData) => (
+    <ExamForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ),
   subject: (setOpen, type, data, relatedData) => (
     <SubjectForm
       type={type}
@@ -103,14 +114,21 @@ const forms: {
       relatedData={relatedData}
     />
   ),
-  announcement: (setOpen, type, data) => (
-    <AnnouncementForm type={type} data={data}  
-     />
+  announcement: (setOpen, type, data, relatedData) => (
+    <AnnouncementForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
   ),
-  assignment: (setOpen, type, data,relatedData) => (
-    <AssignmentForm type={type} data={data}   setOpen={setOpen}
-      relatedData={relatedData} 
-      />
+  assignment: (setOpen, type, data, relatedData) => (
+    <AssignmentForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
   ),
   attendance: (setOpen, type, data) => (
     <AttendanceForm type={type} data={data} />
@@ -123,11 +141,38 @@ const forms: {
       relatedData={relatedData}
     />
   ),
-  event: (setOpen, type, data) => <EventForm type={type} data={data} />,
-  lesson: (setOpen, type, data) => <LessonForm type={type} data={data}  />,
-  parent: (setOpen, type, data) => <ParentForm type={type} data={data} />,
-  result: (setOpen, type, data,relatedData) => <ResultForm type={type} data={data}  
-     />,
+  event: (setOpen, type, data, relatedData) => (
+    <EventForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ),
+  lesson: (setOpen, type, data, relatedData) => (
+    <LessonForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ),
+  parent: (setOpen, type, data, relatedData) => (
+    <ParentForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ),
+  result: (setOpen, type, data, relatedData) => (
+    <ResultForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ),
 };
 
 const FormModel = ({
@@ -142,12 +187,12 @@ const FormModel = ({
     type === "create"
       ? "bg-lamaYellow"
       : type === "update"
-      ? "bg-lamaSky"
-      : "bg-lamaPurple";
+        ? "bg-lamaSky"
+        : "bg-lamaPurple";
   const [open, setOpen] = useState(false);
 
   const Form = () => {
-    const [state, formAction] = useFormState(deleteActionMap[table], {
+    const [state, formAction] = useFormState(deleteActionMap[table] as any, {
       success: false,
       error: false,
     });
@@ -155,15 +200,25 @@ const FormModel = ({
 
     useEffect(() => {
       if (state.success) {
-        toast(`${table} has been deleted!`);
+        toast.success(`${table} has been deleted!`);
         setOpen(false);
         router.refresh();
       }
-    }, [state, router, setOpen, table]);
+      if (state.error) {
+        toast.error("Something went wrong or record not found!");
+      }
+    }, [state, router, table]);
+    useEffect(() => {
+      if (state.success) {
+        toast.success(`${table} has been deleted!`);
+        setOpen(false);
+        router.refresh();
+      }
+    }, [state, router, table]);
 
     return type === "delete" && id ? (
       <form action={formAction} className="p-4 flex flex-col gap-4">
-        <input type="hidden" name="id" defaultValue={id} />
+        <input type="hidden" name="id" value={id} />
         <span className="text-center font-medium">
           All data will be lost. Are you sure you want to delete this {table}?
         </span>

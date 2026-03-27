@@ -15,8 +15,7 @@ const EventListPage = async ({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) => {
-
-  const { userId, sessionClaims } =await auth();
+  const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
   const currentUserId = userId;
 
@@ -91,48 +90,42 @@ const EventListPage = async ({
     </tr>
   );
 
-  const { page, ...queryParams } =await searchParams;
+  const { page, ...queryParams } = await searchParams;
 
   const p = page ? parseInt(page) : 1;
 
-  // URL PARAMS CONDITION
-
   const query: Prisma.EventWhereInput = {};
 
-  if (queryParams) {
-    for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
-        switch (key) {
-          case "search":
-            query.title = { contains: value, mode: "insensitive" };
-            break;
-          default:
-            break;
-        }
-      }
-    }
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.OR = [
+        { classId: null },
+        { class: { lessons: { some: { teacherId: currentUserId! } } } },
+      ];
+      break;
+    case "student":
+      query.OR = [
+        { classId: null },
+        { class: { students: { some: { id: currentUserId! } } } },
+      ];
+      break;
+    case "parent":
+      query.OR = [
+        { classId: null },
+        { class: { students: { some: { parentId: currentUserId! } } } },
+      ];
+      break;
+    default:
+      break;
   }
-
-  // ROLE CONDITIONS
-
-  const roleConditions = {
-    teacher: { lessons: { some: { teacherId: currentUserId! } } },
-    student: { students: { some: { id: currentUserId! } } },
-    parent: { students: { some: { parentId: currentUserId! } } },
-  };
-
-  query.OR = [
-    { classId: null },
-    {
-      class: roleConditions[role as keyof typeof roleConditions] || {},
-    },
-  ];
 
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
       include: {
-        class: true,
+        class: { select: { name: true } },
       },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
@@ -148,10 +141,16 @@ const EventListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button title="f" className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button
+              title="f"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
+            >
               <Image src="/filter.png" alt="" width={14} height={14} />
             </button>
-            <button title="g" className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button
+              title="g"
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
+            >
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && <FormContainer table="event" type="create" />}

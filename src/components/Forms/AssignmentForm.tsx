@@ -2,27 +2,22 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import InputField from "../InputField";
-import {
-  assignmentSchema,
-  AssignmentSchema,
-  examSchema,
-  ExamSchema,
-  subjectSchema,
-  SubjectSchema,
-} from "@/lib/formValidationSechma";
-import {
-  createAssignment,
-  createExam,
-  createSubject,
-  updateAssignment,
-  updateExam,
-  updateSubject,
-} from "@/lib/actions";
-import { useFormState } from "react-dom";
-import { Dispatch, SetStateAction, startTransition, useEffect } from "react";
-import { toast } from "react-toastify";
+import { Dispatch, SetStateAction, useState } from "react";
+import { createAssignment, updateAssignment } from "@/lib/actions";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+
+const schema = z.object({
+  id: z.coerce.number().optional(),
+  title: z.string().min(1, { message: "Title is required!" }),
+  startTime: z.string().min(1, { message: "Start time is required!" }),
+  dueDate: z.string().min(1, { message: "Due date is required!" }),
+  lessonId: z.coerce.number().min(1, { message: "Lesson is required!" }),
+});
+
+type Inputs = z.infer<typeof schema>;
 
 const AssignmentForm = ({
   type,
@@ -39,87 +34,96 @@ const AssignmentForm = ({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<AssignmentSchema>({
-    resolver: zodResolver(assignmentSchema) as any,
+  } = useForm<Inputs>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      ...data,
+
+      startTime: data?.startDate
+        ? new Date(data.startDate).toISOString().slice(0, 16)
+        : "",
+    },
   });
 
-  // AFTER REACT 19 IT'LL BE useFormState
-
-  const [state, formAction] = useFormState(
-    type === "create" ? createAssignment : updateAssignment,
-    {
-      success: false,
-      error: false,
-    }
-  );
-
- 
-const onSubmit = handleSubmit((formData) => {
-  startTransition(() => {
-    formAction(formData);
-  });
-});
-
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    if (state.success) {
-      toast(`Assignment has been ${type === "create" ? "created" : "updated"}!`);
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router, type, setOpen]);
+  const onSubmit = handleSubmit(async (formData) => {
+    setLoading(true);
+    try {
+      const initialState = { success: false, error: false };
 
-  const { lessons=[] } = relatedData || {};
+      const res =
+        type === "create"
+          ? await createAssignment(initialState, formData as any)
+          : await updateAssignment(initialState, formData as any);
+
+      if (res.success) {
+        toast.success(
+          `Assignment has been ${type === "create" ? "created" : "updated"}!`,
+        );
+        setOpen(false);
+        router.refresh();
+      } else {
+        toast.error("Something went wrong!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An unexpected error occurred!");
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  const { lessons } = relatedData;
 
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create a new assignment" : "Update the assignment"}
+        {type === "create" ? "Create a new Assignment" : "Update Assignment"}
       </h1>
 
       <div className="flex justify-between flex-wrap gap-4">
         <InputField
-          label="Assignment title"
+          label="Assignment Title"
           name="title"
           defaultValue={data?.title}
           register={register}
           error={errors?.title}
         />
         <InputField
-          label="Start Date"
+          label="Start Time"
           name="startTime"
-          defaultValue={data?.startTime}
+          type="datetime-local"
+          defaultValue={
+            data?.startDate
+              ? new Date(data.startDate).toISOString().slice(0, 16)
+              : ""
+          }
           register={register}
           error={errors?.startTime}
-          type="datetime-local"
         />
         <InputField
-          label="End Date"
+          label="Due Date"
           name="dueDate"
-          defaultValue={data?.dueDate}
+          type="datetime-local"
+          defaultValue={
+            data?.dueDate
+              ? new Date(data.dueDate).toISOString().slice(0, 16)
+              : ""
+          }
           register={register}
           error={errors?.dueDate}
-          type="datetime-local"
         />
-        {data && (
-          <InputField
-            label="Id"
-            name="id"
-            defaultValue={data?.id}
-            register={register}
-            error={errors?.id}
-            hidden
-          />
-        )}
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+
+        <div className="flex flex-col gap-2 w-full md:w-[24%]">
           <label className="text-xs text-gray-500">Lesson</label>
           <select
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
             {...register("lessonId")}
-            defaultValue={data?.teachers}
+            defaultValue={data?.lessonId}
           >
-            {lessons.map((lesson: { id: number; name: string }) => (
+            {lessons?.map((lesson: any) => (
               <option value={lesson.id} key={lesson.id}>
                 {lesson.name}
               </option>
@@ -132,11 +136,14 @@ const onSubmit = handleSubmit((formData) => {
           )}
         </div>
       </div>
-      {state.error && (
-        <span className="text-red-500">Something went wrong!</span>
-      )}
-      <button className="bg-blue-400 text-white p-2 rounded-md">
-        {type === "create" ? "Create" : "Update"}
+
+      {data && <input type="hidden" name="id" value={data.id} />}
+
+      <button
+        disabled={loading}
+        className="bg-blue-400 text-white p-2 rounded-md disabled:bg-blue-200"
+      >
+        {loading ? "Processing..." : type === "create" ? "Create" : "Update"}
       </button>
     </form>
   );
