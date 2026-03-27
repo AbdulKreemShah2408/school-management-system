@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import InputField from "./InputField";
 import Image from "next/image";
 import { useFormState } from "react-dom"
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState, useTransition } from "react";
 import { studentSchema, StudentSchema } from "@/lib/formValidationSechma";
 import { createStudent, updateStudent } from "@/lib/actions";
 import { useRouter } from "next/navigation";
@@ -40,24 +40,32 @@ const StudentForm = ({
 
   const router = useRouter();
 
-  const onSubmit = handleSubmit((formData) => {
-    startTransition(() => {
-      formAction({
-        id:data?.id,
-        ...formData,
-        img: img?.secure_url || null,
-        parentId: formData.parentId?.toString() || "",
-      });
-    });
-  });
-
   useEffect(() => {
-    if (state.success) {
-      toast(`Student has been ${type === "create" ? "created" : "updated"}!`);
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router, type, setOpen]);
+      if (state.success) {
+        if (setOpen) setOpen(false);
+  
+        router.refresh();
+  
+        router.push("/list/students");
+      }
+    }, [state.success, router, setOpen]);
+    const [isPending, startTransition] = useTransition();
+    const onSubmit = handleSubmit(
+      async (values) => {
+        startTransition(async () => {
+          await (formAction as any)(values);
+  
+          if (setOpen) setOpen(false);
+  
+          toast.success(
+            `Students has been ${type === "create" ? "created" : "updated"} successfully!`,
+          );
+        });
+      },
+      (errors) => {
+        console.log("❌ VALIDATION ERRORS:", errors);
+      },
+    );
 
   const { grades = [], classes = [], parents = [] } = relatedData || {};
 

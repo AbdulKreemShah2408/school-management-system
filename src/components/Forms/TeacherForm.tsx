@@ -11,6 +11,7 @@ import {
   startTransition,
   useEffect,
   useState,
+  useTransition,
 } from "react";
 import { teacherSchema, TeacherSchema } from "@/lib/formValidationSechma";
 import { useRouter } from "next/navigation";
@@ -49,19 +50,32 @@ const TeacherForm = ({
 
   const router = useRouter();
 
-  const onSubmit = handleSubmit((formData) => {
-    startTransition(() => {
-      formAction({ ...formData, img: img?.secure_url });
-    });
-  });
-
   useEffect(() => {
-    if (state.success) {
-      toast(`Teacher has been ${type === "create" ? "created" : "updated"}!`);
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router, type, setOpen]);
+      if (state.success) {
+        if (setOpen) setOpen(false);
+  
+        router.refresh();
+  
+        router.push("/list/teachers");
+      }
+    }, [state.success, router, setOpen]);
+    const [isPending, startTransition] = useTransition();
+    const onSubmit = handleSubmit(
+      async (values) => {
+        startTransition(async () => {
+          await (formAction as any)(values);
+  
+          if (setOpen) setOpen(false);
+  
+          toast.success(
+            `Teacher has been ${type === "create" ? "created" : "updated"} successfully!`,
+          );
+        });
+      },
+      (errors) => {
+        console.log("❌ VALIDATION ERRORS:", errors);
+      },
+    );
 
   const { subjects } = relatedData;
 
