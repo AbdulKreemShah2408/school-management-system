@@ -29,7 +29,7 @@ const ClassForm = ({
   } = useForm<ClassSchema>({
     resolver: zodResolver(classSchema) as any,
   });
-
+const router=useRouter();
   const [state, formAction, isPending] = useFormState(
     type === "create" ? createClass : updateClass,
     {
@@ -38,21 +38,33 @@ const ClassForm = ({
     },
   );
 
-  const onSubmit = handleSubmit((formData) => {
-    startTransition(() => {
-      formAction(formData);
-    });
-  });
-
-  const router = useRouter();
-
-  useEffect(() => {
-    if (state.success) {
-      toast(`Class has been ${type === "create" ? "created" : "updated"}!`);
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router, type, setOpen]);
+ useEffect(() => {
+      if (state.success) {
+        if (setOpen) setOpen(false);
+  
+        router.refresh();
+  
+        router.push("/list/classes");
+      }
+    }, [state.success, router, setOpen]);
+   
+    const onSubmit = handleSubmit(
+      async (values) => {
+        startTransition(async () => {
+          await (formAction as any)(values);
+  
+          if (setOpen) setOpen(false);
+  
+          toast.success(
+            `Class has been ${type === "create" ? "created" : "updated"} successfully!`,
+          );
+        });
+      },
+      (errors) => {
+        console.log("❌ VALIDATION ERRORS:", errors);
+      },
+    );
+  
 
   const { teachers = [], grades = [] } = relatedData || {};
 
