@@ -57,23 +57,36 @@ const StudentForm = ({
   }, [state.success, router, setOpen]);
   const [isPending, startTransition] = useTransition();
   const onSubmit = handleSubmit(
-    async (values) => {
-      startTransition(async () => {
-        await (formAction as any)({ ...values, img: img?.secure_url });
+  async (values) => {
+    
+    console.log("Image from state:", img?.secure_url);
 
-        if (setOpen) {
-          setTimeout(() => setOpen(false), 500);
-        }
+    startTransition(async () => {
+     
+      const payload = { 
+        ...values, 
+        img: img?.secure_url || data?.img || null 
+      };
 
-        toast.success(
-          `Student has been ${type === "create" ? "created" : "updated"} successfully!`,
-        );
-      });
-    },
-    (errors) => {
-      console.log("❌ VALIDATION ERRORS:", errors);
-    },
-  );
+      console.log("Final Payload being sent to Server Action:", payload);
+
+   
+      const result = await (formAction as any)(payload);
+
+      
+      if (setOpen) {
+        setTimeout(() => setOpen(false), 800);
+      }
+      
+      toast.success(
+        `Student has been ${type === "create" ? "created" : "updated"} successfully!`
+      );
+    });
+  },
+  (errors) => {
+    console.log("❌ VALIDATION ERRORS:", errors);
+  }
+);
 
   const { grades = [], classes = [], parents = [] } = relatedData || {};
 
