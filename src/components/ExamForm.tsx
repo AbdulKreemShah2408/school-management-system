@@ -50,21 +50,36 @@ const ExamForm = ({
   );
 
  
-const onSubmit = handleSubmit((formData) => {
-  startTransition(() => {
-    formAction(formData);
-  });
-});
+
 
   const router = useRouter();
-
-  useEffect(() => {
-    if (state.success) {
-      toast(`Exam has been ${type === "create" ? "created" : "updated"}!`);
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router, type, setOpen]);
+useEffect(() => {
+      if (state.success) {
+        if (setOpen) setOpen(false);
+  
+        router.refresh();
+  
+        router.push("/list/exams");
+      }
+    }, [state.success, router, setOpen]);
+   
+    const onSubmit = handleSubmit(
+      async (values) => {
+        startTransition(async () => {
+          await (formAction as any)(values);
+  
+          if (setOpen) setOpen(false);
+  
+          toast.success(
+            `Exam has been ${type === "create" ? "created" : "updated"} successfully!`,
+          );
+        });
+      },
+      (errors) => {
+        console.log("❌ VALIDATION ERRORS:", errors);
+      },
+    );
+  
 
   const { lessons } = relatedData;
 
