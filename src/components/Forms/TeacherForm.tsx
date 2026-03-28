@@ -61,21 +61,17 @@ const TeacherForm = ({
     }, [state.success, router, setOpen]);
     const [isPending, startTransition] = useTransition();
     const onSubmit = handleSubmit(
-      async (values) => {
-        startTransition(async () => {
-          await (formAction as any)(values);
-          await (formAction as any)({ ...values, img: img?.secure_url });
-          if (setOpen) setOpen(false);
-  
-          toast.success(
-            `Teacher has been ${type === "create" ? "created" : "updated"} successfully!`,
-          );
-        });
-      },
-      (errors) => {
-        console.log("❌ VALIDATION ERRORS:", errors);
-      },
-    );
+  async (values) => {
+    startTransition(async () => {
+      
+      await (formAction as any)({ ...values, img: img?.secure_url });
+
+    });
+  },
+  (errors) => {
+    console.log("❌ VALIDATION ERRORS:", errors);
+  },
+);
 
   const { subjects } = relatedData;
 
