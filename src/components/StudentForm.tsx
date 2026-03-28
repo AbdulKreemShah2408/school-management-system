@@ -56,35 +56,30 @@ const StudentForm = ({
     }
   }, [state.success, router, setOpen]);
   const [isPending, startTransition] = useTransition();
-  const onSubmit = handleSubmit(
+ const onSubmit = handleSubmit(
   async (values) => {
-    
-    console.log("Image from state:", img?.secure_url);
-
     startTransition(async () => {
-     
+   
       const payload = { 
         ...values, 
+        id: data?.id, 
         img: img?.secure_url || data?.img || null 
       };
 
-      console.log("Final Payload being sent to Server Action:", payload);
-
-   
-      const result = await (formAction as any)(payload);
-
       
-      if (setOpen) {
-        setTimeout(() => setOpen(false), 800);
+
+      const response = type === "create" 
+        ? await createStudent(state, payload) 
+        : await updateStudent(state, payload);
+
+      if (response.success) {
+        toast.success(`Student ${type}ed successfully!`);
+        setOpen(false);
+        router.refresh();
+      } else {
+        toast.error("Action failed. Check server console.");
       }
-      
-      toast.success(
-        `Student has been ${type === "create" ? "created" : "updated"} successfully!`
-      );
     });
-  },
-  (errors) => {
-    console.log("❌ VALIDATION ERRORS:", errors);
   }
 );
 
