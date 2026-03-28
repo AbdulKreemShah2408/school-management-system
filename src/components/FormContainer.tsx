@@ -112,6 +112,8 @@ const FormContainer = async ({
         };
         break;
 
+       
+
       case "assignment":
         if (!externalRelatedData?.lessons) {
           const assignmentLessons = await prisma.lesson.findMany({
@@ -123,13 +125,8 @@ const FormContainer = async ({
           relatedData = { lessons: assignmentLessons };
         }
         break;
-      case "result":
-      case "event":
-        const eventClasses = await prisma.class.findMany({
-          select: { id: true, name: true },
-        });
-        relatedData = { classes: eventClasses };
-        break;
+
+      case "result": 
         const resultExams = await prisma.exam.findMany({
           select: { id: true, title: true },
         });
@@ -145,6 +142,16 @@ const FormContainer = async ({
           students: resultStudents,
         };
         break;
+
+      case "event": 
+        const eventClasses = await prisma.class.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { classes: eventClasses };
+        break;
+
+      
+
       case "announcement":
         const announcementClasses = await prisma.class.findMany({
           select: {
