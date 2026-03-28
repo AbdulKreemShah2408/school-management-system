@@ -65,6 +65,13 @@ const TeacherForm = ({
     startTransition(async () => {
       
       await (formAction as any)({ ...values, img: img?.secure_url });
+      if (setOpen) {
+        setTimeout(() => setOpen(false), 500); 
+      }
+
+      toast.success(
+        `Teacher has been ${type === "create" ? "created" : "updated"} successfully!`,
+      );
 
     });
   },
