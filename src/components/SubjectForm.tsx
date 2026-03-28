@@ -30,7 +30,6 @@ const SubjectForm = ({
     resolver: zodResolver(subjectSchema) as any,
   });
 
-  // Server actions state
   const [state, formAction, isPending] = useFormState(
     type === "create" ? createSubject : updateSubject,
     {
@@ -39,7 +38,7 @@ const SubjectForm = ({
     }
   );
 
-  // Handle form submit
+ 
   const onSubmit = handleSubmit((formData) => {
     startTransition(() => {
       formAction(formData);
