@@ -113,7 +113,8 @@ const ResultListPage = async ({
       break;
   }
 
-  const [dataRes, count] = await prisma.$transaction([
+
+  const [dataRes, count, students, exams, assignments] = await prisma.$transaction([
     prisma.result.findMany({
       where: query,
       include: {
@@ -143,6 +144,10 @@ const ResultListPage = async ({
       skip: ITEM_PER_PAGE * (p - 1),
     }),
     prisma.result.count({ where: query }),
+  
+    prisma.student.findMany({ select: { id: true, name: true, surname: true } }),
+    prisma.exam.findMany({ select: { id: true, title: true } }),
+    prisma.assignment.findMany({ select: { id: true, title: true } }),
   ]);
 
   const data = dataRes
@@ -162,7 +167,7 @@ const ResultListPage = async ({
         score: item.score,
         className: assessment.lesson.class.name,
         startTime: isExam
-          ? assessment.startTime
+          ? (assessment as any).startTime
           : (assessment as any).startDate,
       };
     })
@@ -188,7 +193,12 @@ const ResultListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormContainer table="result" type="create" />
+             
+              <FormContainer 
+                table="result" 
+                type="create" 
+                relatedData={{ students, exams, assignments }} 
+              />
             )}
           </div>
         </div>
