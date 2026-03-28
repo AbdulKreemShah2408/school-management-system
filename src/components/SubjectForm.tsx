@@ -6,7 +6,7 @@ import InputField from "./InputField";
 import { subjectSchema, SubjectSchema } from "@/lib/formValidationSechma";
 import { createSubject, updateSubject } from "@/lib/actions";
 import { useFormState } from "react-dom"
-import { Dispatch, SetStateAction, } from "react";
+import { Dispatch, SetStateAction, useTransition, } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useEffect, startTransition } from "react";
@@ -37,23 +37,36 @@ const SubjectForm = ({
       error: false,
     }
   );
-
+const router=useRouter();
  
-  const onSubmit = handleSubmit((formData) => {
-    startTransition(() => {
-      formAction(formData);
-    });
-  });
-
-  const router = useRouter();
-
   useEffect(() => {
-    if (state.success) {
-      toast(`Subject has been ${type === "create" ? "created" : "updated"}!`);
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router, type, setOpen]);
+      if (state.success) {
+        if (setOpen) setOpen(false);
+  
+        router.refresh();
+  
+        router.push("/list/subjects");
+      }
+    }, [state.success, router, setOpen]);
+   
+    const onSubmit = handleSubmit(
+      async (values) => {
+        startTransition(async () => {
+          await (formAction as any)(values);
+  
+          if (setOpen) setOpen(false);
+  
+          toast.success(
+            `Subject has been ${type === "create" ? "created" : "updated"} successfully!`,
+          );
+        });
+      },
+      (errors) => {
+        console.log("❌ VALIDATION ERRORS:", errors);
+      },
+    );
+  
+  
 
   const { teachers } = relatedData || { teachers: [] };
 
