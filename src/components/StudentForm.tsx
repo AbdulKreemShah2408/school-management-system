@@ -16,7 +16,6 @@ import { studentSchema, StudentSchema } from "@/lib/formValidationSechma";
 import { createStudent, updateStudent } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { startTransition } from "react";
 import { CldUploadWidget } from "next-cloudinary";
 
 const StudentForm = ({
@@ -39,61 +38,62 @@ const StudentForm = ({
   });
 
   const [img, setImg] = useState<any>();
+  const [isMounted, setIsMounted] = useState(false); 
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const [state, formAction] = useFormState(
     type === "create" ? createStudent : updateStudent,
-    { success: false, error: false },
+    { success: false, error: false }
   );
-
-  const router = useRouter();
 
   useEffect(() => {
     if (state.success) {
-      if (setOpen) setOpen(false);
-
+      toast.success(`Student has been ${type}ed!`);
+      setOpen(false);
       router.refresh();
-
-      router.push("/list/students");
     }
-  }, [state.success, router, setOpen]);
-  const [isPending, startTransition] = useTransition();
- const onSubmit = handleSubmit(
-  async (values) => {
+  }, [state.success, router, setOpen, type]);
+
+  const onSubmit = handleSubmit((values) => {
     startTransition(async () => {
-   
-      const payload = { 
-        ...values, 
-        id: data?.id, 
-        img: img?.secure_url || data?.img || null 
+    
+      const payload = {
+        ...values,
+        id: data?.id,
+        img: img?.secure_url || data?.img || null,
       };
 
-      
-
-      const response = type === "create" 
-        ? await createStudent(state, payload) 
-        : await updateStudent(state, payload);
+      const response =
+        type === "create"
+          ? await createStudent(state, payload)
+          : await updateStudent(state, payload);
 
       if (response.success) {
-        toast.success(`Student ${type}ed successfully!`);
         setOpen(false);
         router.refresh();
       } else {
         toast.error("Action failed. Check server console.");
       }
     });
-  }
-);
+  });
+
+  if (!isMounted) return null; 
 
   const { grades = [], classes = [], parents = [] } = relatedData || {};
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-8" onSubmit={onSubmit} suppressHydrationWarning>
       <h1 className="text-xl font-semibold">
         {type === "create" ? "Create a new student" : "Update the student"}
       </h1>
 
-      <span className="text-xs text-gray-400 font-medium">
-        Authentication Information
-      </span>
+      <span className="text-xs text-gray-400 font-medium">Authentication Information</span>
       <div className="flex justify-between flex-wrap gap-4">
         <InputField
           label="Username"
@@ -119,9 +119,7 @@ const StudentForm = ({
         />
       </div>
 
-      <span className="text-xs text-gray-400 font-medium">
-        Personal Information
-      </span>
+      <span className="text-xs text-gray-400 font-medium">Personal Information</span>
       <CldUploadWidget
         uploadPreset="school"
         onSuccess={(result, { widget }) => {
@@ -135,7 +133,7 @@ const StudentForm = ({
             onClick={() => open()}
           >
             <Image src="/upload.png" alt="" width={28} height={28} />
-            <span>Upload a photo</span>
+            <span>{img?.secure_url ? "Photo Uploaded ✅" : "Upload a photo"}</span>
           </div>
         )}
       </CldUploadWidget>
@@ -197,23 +195,12 @@ const StudentForm = ({
             {...register("parentId")}
             defaultValue={data?.parentId || ""}
           >
-            {parents.length > 0 ? (
-              parents.map(
-                (parent: { id: string; name: string; surname: string }) => (
-                  <option value={parent.id} key={parent.id}>
-                    {parent.name} {parent.surname}
-                  </option>
-                ),
-              )
-            ) : (
-              <option disabled>No parents available</option>
-            )}
+            {parents.map((parent: { id: string; name: string; surname: string }) => (
+              <option value={parent.id} key={parent.id}>
+                {parent.name} {parent.surname}
+              </option>
+            ))}
           </select>
-          {errors.parentId && (
-            <p className="text-xs text-red-400">
-              {errors.parentId.message?.toString()}
-            </p>
-          )}
         </div>
 
         {/* Sex */}
@@ -227,11 +214,6 @@ const StudentForm = ({
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
           </select>
-          {errors.sex?.message && (
-            <p className="text-xs text-red-400">
-              {errors.sex.message.toString()}
-            </p>
-          )}
         </div>
 
         {/* Grade */}
@@ -242,21 +224,12 @@ const StudentForm = ({
             {...register("gradeId")}
             defaultValue={data?.gradeId}
           >
-            {grades.length > 0 ? (
-              grades.map((grade: { id: number; level: number }) => (
-                <option value={grade.id} key={grade.id}>
-                  {grade.level}
-                </option>
-              ))
-            ) : (
-              <option disabled>No grades available</option>
-            )}
+            {grades.map((grade: { id: number; level: number }) => (
+              <option value={grade.id} key={grade.id}>
+                {grade.level}
+              </option>
+            ))}
           </select>
-          {errors.gradeId?.message && (
-            <p className="text-xs text-red-400">
-              {errors.gradeId.message.toString()}
-            </p>
-          )}
         </div>
 
         {/* Class */}
@@ -267,38 +240,21 @@ const StudentForm = ({
             {...register("classId")}
             defaultValue={data?.classId}
           >
-            {classes.length > 0 ? (
-              classes.map(
-                (classItem: {
-                  id: number;
-                  name: string;
-                  capacity: number;
-                  _count?: { students: number };
-                }) => (
-                  <option value={classItem.id} key={classItem.id}>
-                    ({classItem.name} - {classItem._count?.students ?? 0}/
-                    {classItem.capacity} Capacity)
-                  </option>
-                ),
-              )
-            ) : (
-              <option disabled>No classes available</option>
-            )}
+            {classes.map((classItem: any) => (
+              <option value={classItem.id} key={classItem.id}>
+                {classItem.name}
+              </option>
+            ))}
           </select>
-          {errors.classId?.message && (
-            <p className="text-xs text-red-400">
-              {errors.classId.message.toString()}
-            </p>
-          )}
         </div>
       </div>
 
-      {state.error && (
-        <span className="text-red-500">Something went wrong!</span>
-      )}
-
-      <button type="submit" className="bg-blue-400 text-white p-2 rounded-md">
-        {type === "create" ? "Create" : "Update"}
+      <button
+        disabled={isPending}
+        type="submit"
+        className="bg-blue-400 text-white p-2 rounded-md disabled:bg-blue-200"
+      >
+        {isPending ? "Processing..." : type === "create" ? "Create" : "Update"}
       </button>
     </form>
   );
